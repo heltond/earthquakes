@@ -3,10 +3,10 @@
 
 <head>
   <meta charset=utf-8 />
-  <title>Earthquakes</title>
+  <title>Earthquakes in North America</title>
   <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
 
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css" />
   <link href='http://fonts.googleapis.com/css?family=Lato' rel='stylesheet' type='text/css'>
 
   <style>
@@ -14,6 +14,7 @@
       margin: 0;
       padding: 0;
     }
+
     #map {
       position: absolute;
       top: 0;
@@ -29,41 +30,94 @@
   <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
   <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"></script>
   <script>
-    var options = {
-      center: [38, -90],
-      zoom: 4
-    }
+
     var map = L.map('map', {
-    center: [36,-94],
-    zoom: 4,
-});
-var tiles = L.tileLayer('http://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="http://cartodb.com/attributions">CartoDB</a>',
-    subdomains: 'abcd',
-    maxZoom: 19
-});  
-tiles.addTo(map);
+      center: [36, -94],
+      zoom: 4,
+    });
+    var tiles = L.tileLayer('http://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="http://cartodb.com/attributions">CartoDB</a>',
+      subdomains: 'abcd',
+      maxZoom: 19
+    }).addTo(map);
+    $.getJSON("data/query.geojson", function (query) {
+      var commonStyles = {
+        color: 'yellow',
+        weight: 1,
+        fillColor: 'yellow',
+        fillOpacity: .8,
+      }
 
-$.getJSON("data/query.geojson", function(data) {
-data.features.sort(function(a, b) {
-  return b.properties.mag - a.properties.mag;
-});
-})
+      var bigMag = L.geoJson(query, {
+        pointToLayer: function (feature, latlng) {
+          return L.circleMarker(latlng, commonStyles);
+        },
+        style: function (feature) {
+          return {
+            radius: feature.properties.mag * feature.properties.mag
+          }
+        },
+        filter: function (feature) {
+          if (feature.properties.mag >= 6) {
+            return feature;
+          }
+        },
+        onEachFeature: function (feature, layer) {
+          layer.bindTooltip(`<b>` + feature.properties.place + `<br>Magnitude: </b>` + (feature.properties.mag).toPrecision(3)
+          )
+        }
+      }).addTo(map);
 
+      var mediumMag = L.geoJson(query, {
+        pointToLayer: function (feature, latlng) {
+          return L.circleMarker(latlng, commonStyles);
+        },
+        style: function (feature) {
+          return {
+            radius: feature.properties.mag * feature.properties.mag
+          }
+        },
+        filter: function (feature) {
+          if (feature.properties.mag >= 4 && feature.properties.mag < 6) {
+            return feature;
+          }
+        },
+        onEachFeature: function (feature, layer) {
+          layer.bindTooltip(`<b>` + feature.properties.place + `<br>Magnitude: </b>` + (feature.properties.mag).toPrecision(3)
+          )
+        }
+      }).addTo(map);
 
-$.getJSON("data/query.geojson", function(data) {
-  L.geoJson(data, {
-    pointToLayer: function(feature, latlng) {
-            return L.circleMarker(latlng, {
-              color: 'yellow',
-              weight: 1,
-              fillColor: 'yellow',
-              fillOpacity: .8,
-              radius: feature.properties.mag * feature.properties.mag
-            });
-  }
-  }).addTo(map);
-});
+      var smallMag = L.geoJson(query, {
+        pointToLayer: function (feature, latlng) {
+          return L.circleMarker(latlng, commonStyles);
+        },
+        style: function (feature) {
+          return {
+            radius: feature.properties.mag * feature.properties.mag
+          }
+        },
+        filter: function (feature) {
+          if (feature.properties.mag < 4) {
+            return feature;
+          }
+        },
+        onEachFeature: function (feature, layer) {
+          layer.bindTooltip(`<b>` + feature.properties.place + `<br>Magnitude: </b>` + (feature.properties.mag).toPrecision(3)
+          )
+        }
+      }).addTo(map);
+
+      var sourcesLabels = {
+        "<b>Magnitude 6+</b>": bigMag,
+        "<b>Magnitude 4-6</b>": mediumMag,
+        "<b>Magnitude 2.5-4</b>": smallMag
+      }
+
+      L.control.layers(null, sourcesLabels, {
+        collapsed: false
+      }).addTo(map);
+    })
   </script>
 
 </body>
