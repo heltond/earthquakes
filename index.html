@@ -3,7 +3,7 @@
 
 <head>
   <meta charset=utf-8 />
-  <title>Earthquakes in North America</title>
+  <title>Earthquakes in North America 2019</title>
   <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css" />
@@ -21,11 +21,60 @@
       bottom: 0;
       width: 100%;
     }
+
+    #info-button {
+      padding: 8px 5px;
+      font-size: 0.9em;
+      font-weight: bolder;
+      border: 2px solid rgba(244, 244, 244, 0.2);
+      background: rgba(100, 100, 100, 0.9);
+      color: rgba(244, 244, 244, 0.8);
+      border-radius: 5px;
+      position: fixed;
+      top: 12px;
+      right: 152px;
+      z-index: 9999;
+      cursor: pointer;
+    }
+
+    #footer {
+      width: 100%;
+      background: rgba(244, 244, 244, 0.8);
+      color: rgba(20, 20, 20, 0.8);
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+      height: 0px;
+      padding: 0px;
+      z-index: 9000;
+      position: absolute;
+      bottom: -10px;
+      overflow: scroll;
+    }
+
+    #footer div {
+      padding: 10px;
+    }
+
+    #footer h1 {
+      font-size: 1.3em;
+      margin: 0 0 5px 0;
+    }
   </style>
 </head>
 
 <body>
-
+  <div id='map'></div>
+  <button id="info-button" onclick="myInfo()">Information</button>
+  <div id='footer'>
+    <div>
+      <h1>Earthquakes in the Contiguous United States, 2019</h1>
+      This map depicts earthquakes that have happened in or adjacent to the continental United States in 2019.
+      Earthquakes are depicted
+      and sortable by magnitude groupings as defined by the source of this data, the
+      <a href="https://earthquake.usgs.gov/">Earthquake Hazards Program</a> of the USGS.
+      <br><br>This map was made by Daniel Helton, as part of <a href="https://newmapsplus.as.uky.edu/">New Maps Plus</a>
+      from the University of Kentucky.
+    </div>
+  </div>
   <div id='map'></div>
   <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
   <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"></script>
@@ -41,16 +90,30 @@
       maxZoom: 19
     }).addTo(map);
     $.getJSON("data/query.geojson", function (query) {
-      var commonStyles = {
+      var smallStyle = {
         color: 'yellow',
         weight: 1,
         fillColor: 'yellow',
         fillOpacity: .8,
       }
 
+      var medStyle = {
+        color: '#F8DE7E',
+        weight: 1,
+        fillColor: '#F8DE7E',
+        fillOpacity: .8,
+      }
+
+      var bigStyle = {
+        color: '#D5B85A',
+        weight: 1,
+        fillColor: '#D5B85A',
+        fillOpacity: .8,
+      }
+
       var bigMag = L.geoJson(query, {
         pointToLayer: function (feature, latlng) {
-          return L.circleMarker(latlng, commonStyles);
+          return L.circleMarker(latlng, bigStyle);
         },
         style: function (feature) {
           return {
@@ -70,7 +133,7 @@
 
       var mediumMag = L.geoJson(query, {
         pointToLayer: function (feature, latlng) {
-          return L.circleMarker(latlng, commonStyles);
+          return L.circleMarker(latlng, medStyle);
         },
         style: function (feature) {
           return {
@@ -90,7 +153,7 @@
 
       var smallMag = L.geoJson(query, {
         pointToLayer: function (feature, latlng) {
-          return L.circleMarker(latlng, commonStyles);
+          return L.circleMarker(latlng, smallStyle);
         },
         style: function (feature) {
           return {
@@ -118,6 +181,22 @@
         collapsed: false
       }).addTo(map);
     })
+
+    var clicked = false
+    function myInfo() {
+
+      var x = document.getElementById('footer');
+      var y = document.getElementById('info-button');
+      if (clicked) {
+        y.style.background = 'rgba(100, 100, 100, 0.9)';
+        x.style.height = '0px';
+      } else {
+        y.style.background = 'rgba(146, 239, 146, 0.8)'
+        x.style.height = '33vh';
+      }
+      clicked = !clicked
+
+    }
   </script>
 
 </body>
